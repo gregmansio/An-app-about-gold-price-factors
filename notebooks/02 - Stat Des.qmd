@@ -1,0 +1,52 @@
+---
+title: "Gold & Treasury Yields — Descriptive Statistics"
+author: "Gregoire MANSIO"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Data Loading
+
+```{r}
+library(arrow)
+library(tidyverse)
+
+panel <- read_parquet("data/macro_panel.parquet")
+
+glimpse(panel)
+```
+
+## Time Range
+
+```{r}
+cat("First observation :", format(min(panel$date)), "\n")
+cat("Last observation  :", format(max(panel$date)), "\n")
+cat("Number of points  :", nrow(panel), "\n")
+```
+
+## Descriptive Statistics
+
+```{r}
+panel |>
+  select(gold, yield) |>
+  summary()
+```
+
+## Raw Series Visualization
+
+```{r}
+panel |>
+  pivot_longer(cols = c(gold, yield), names_to = "series", values_to = "value") |>
+  ggplot(aes(x = date, y = value, color = series)) +
+  geom_line() +
+  facet_wrap(~series, scales = "free_y", ncol = 1) +
+  labs(
+    title = "Gold Price (USD/oz) and 10Y US Treasury Yield (%)",
+    x = NULL, y = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```

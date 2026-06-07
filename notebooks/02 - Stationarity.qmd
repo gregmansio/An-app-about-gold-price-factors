@@ -1,0 +1,95 @@
+---
+title: "Gold & Treasury Yields — Stationarity Testing"
+author: "Gregoire MANSIO"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Why Stationarity Matters
+
+Before testing for any long-run relationship between gold and Treasury yields, we need 
+to establish the order of integration of each series.
+
+A series is said to be **stationary** (I(0)) if it fluctuates around a constant mean 
+with constant variance over time. A series is **integrated of order 1** (I(1)) if it 
+is non-stationary in level but becomes stationary after taking first differences.
+
+Cointegration — and the VECM that follows — requires both series to be I(1). 
+If one series is I(0) and the other I(1), the framework collapses.
+
+The **Augmented Dickey-Fuller (ADF)** test is a standard tool for this. It tests 
+the null hypothesis of a unit root (non-stationarity) against the alternative of stationarity.
+
+$$H_0: \text{series has a unit root (non-stationary)}$$
+$$H_1: \text{series is stationary}$$
+
+A **p-value below 0.05** leads us to reject $H_0$ and conclude stationarity.
+
+---
+
+## Setup
+
+```{r}
+library(arrow)
+library(tidyverse)
+library(tseries)   # adf.test()
+
+panel <- read_parquet("../data/macro_panel.parquet")
+```
+
+---
+
+## ADF Tests — Levels
+
+We first test each series in level. We expect to **fail to reject** $H_0$ — 
+i.e. both series should appear non-stationary in level.
+
+```{r}
+adf_gold_level <- adf.test(panel$gold)
+adf_yield_level <- adf.test(panel$yield)
+
+tibble(
+  Series     = c("Gold (level)", "Yield (level)"),
+  Statistic  = c(adf_gold_level$statistic, adf_yield_level$statistic),
+  P_value    = c(adf_gold_level$p.value, adf_yield_level$p.value),
+  Conclusion = c(
+    ifelse(adf_gold_level$p.value  < 0.05, "Stationary I(0)", "Non-stationary I(1)"),
+    ifelse(adf_yield_level$p.value < 0.05, "Stationary I(0)", "Non-stationary I(1)")
+  )
+) |>
+  knitr::kable(digits = 3)
+```
+
+---
+
+## ADF Tests — First Differences
+
+We now test the first differences. We expect to **reject** $H_0$ — 
+both differenced series should be stationary.
+
+```{r}
+adf_gold_diff  <- adf.test(diff(panel$gold))
+adf_yield_diff <- adf.test(diff(panel$yield))
+
+tibble(
+  Series     = c("Gold (1st diff)", "Yield (1st diff)"),
+  Statistic  = c(adf_gold_diff$statistic, adf_yield_diff$statistic),
+  P_value    = c(adf_gold_diff$p.value, adf_yield_diff$p.value),
+  Conclusion = c(
+    ifelse(adf_gold_diff$p.value  < 0.05, "Stationary I(0)", "Non-stationary I(1)"),
+    ifelse(adf_yield_diff$p.value < 0.05, "Stationary I(0)", "Non-stationary I(1)")
+  )
+) |>
+  knitr::kable(digits = 3)
+```
+
+---
+
+## Interpretation
+
+Both series are I(1) in level with p-values of 0.990 for Gold and 0.565 for the 10µyears yield. They also are I(0) in first difference with very strong p-values rejections (both at 0,01). 
+
+The condition for cointegration testing is met and we can proceed to the Johansen test in the next step.
