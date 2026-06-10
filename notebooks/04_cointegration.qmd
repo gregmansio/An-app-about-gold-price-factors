@@ -1,0 +1,109 @@
+---
+title: "Gold & Treasury Yields — Cointegration Testing"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## What is Cointegration?
+
+Two I(1) series are said to be **cointegrated** if a linear combination of them is stationary. Intuitively, even though each series wanders randomly on its own, they move together in the long run — they share a common stochastic trend.
+
+In our case, cointegration between gold and the 10Y yield would mean that deviations from the long-run equilibrium relationship are temporary and self-correcting — which is precisely what H1 and H2 require.
+
+------------------------------------------------------------------------
+
+## The Johansen Test
+
+The **Johansen test** is the standard multivariate framework for cointegration. It tests for the number of cointegrating vectors $r$ in a system of I(1) series.
+
+We test sequentially:
+
+$$H_0: r = 0 \quad \text{(no cointegration)}$$ $$H_0: r \leq 1 \quad \text{(at most one cointegrating vector)}$$
+
+Rejecting $r = 0$ and failing to reject $r \leq 1$ confirms exactly one cointegrating relationship — which is what we expect in a bivariate system.
+
+The test comes in two variants:
+
+-   **Trace test** : tests whether the number of cointegrating vectors is less than $r$
+-   **Maximum eigenvalue test** : tests whether there are exactly $r$ cointegrating vectors
+
+We report both.
+
+------------------------------------------------------------------------
+
+## Setup
+
+```{r}
+library(arrow)
+library(tidyverse)
+library(urca)
+
+panel <- read_parquet("../data/macro_panel.parquet")
+
+# Bind series into a matrix — required by ca.jo()
+y <- cbind(panel$gold, panel$yield)
+colnames(y) <- c("gold", "yield")
+```
+
+------------------------------------------------------------------------
+
+## Lag Selection
+
+The Johansen test requires specifying the number of lags. We use the **Akaike Information Criterion (AIC)** to select the optimal lag length.
+
+```{r}
+library(vars) 
+
+lag_select <- VARselect(y, lag.max = 10, type = "const")
+optimal_lag <- lag_select$selection["AIC(n)"]
+
+cat("Optimal lag (AIC):", optimal_lag, "\n")
+```
+
+------------------------------------------------------------------------
+
+## Johansen Test — Trace
+
+```{r}
+joh_trace <- ca.jo(
+  y,
+  type  = "trace",
+  ecdet = "const",
+  K     = optimal_lag
+)
+
+summary(joh_trace)
+```
+
+------------------------------------------------------------------------
+
+## Johansen Test — Maximum Eigenvalue
+
+```{r}
+joh_eigen <- ca.jo(
+  y,
+  type  = "eigen",
+  ecdet = "const",
+  K     = optimal_lag
+)
+
+summary(joh_eigen)
+```
+
+------------------------------------------------------------------------
+
+## Interpretation
+
+For each test, we compare the **test statistic** to the **critical value at 5%**:
+
+-   For the Trace test, for $H_0: r = 0$ , the test-statistic is of 17.39, which is below the critical value at 5% (19.96) and even below the critical value at 10% (17.85).
+-   For the Eigenvalue test, also for $H_0: r = 0$ , the test-statistic is of 13.24, which is also below the critical values at 5% (15.67) and at 10% (13.75).
+
+**We** **expected this first H0 to be rejected**, but in both cases we fail to reject it.
+
+## Conclusion
+
+The cointegration test has failed on the full time window. Still, by looking at the descriptive statistics, we see graphical evidences of a potential inflexion point around 2022 in the relationship of the two curves. We will therefore re-investigate the cointegration between 2011 and 2022.

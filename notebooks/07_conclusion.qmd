@@ -1,0 +1,79 @@
+---
+title: "Gold & Treasury Yields — Conclusion & Perspectives"
+author: "Gregoire MANSIO"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Conclusion
+
+This project investigated whether the nominal 10Y US Treasury yield constitutes a reliable indicator of gold prices, using daily data from June 2011 to June 2026. The question was deliberately framed around the nominal yield — rather than the theoretically superior real yield — to assess the practical signal value of the most immediately observable rate.
+
+The empirical evidence is clear: **the nominal yield does not structurally explain gold prices.** Cointegration tests fail on both the full period and the pre-2022 sub-period, and rolling OLS estimates confirm that explanatory power is episodic at best — activating in specific low-inflation macro regimes (notably 2014–2016 and 2018–2022) and collapsing elsewhere. The Z-score analysis further reveals that gold has been operating in historically anomalous territory since 2024, driven by factors that lie outside the scope of this analysis and that the nominal yield alone cannot capture.
+
+This result is not a failure — it is informative. The nominal yield conflates the real rate and breakeven inflation, two forces with opposing effects on gold. Its inability to track gold consistently is precisely what the Fisher decomposition predicts:
+
+$$\text{Nominal Yield} = \text{Real Yield} + \text{Breakeven Inflation Rate}$$
+
+A natural extension of this work would be to decompose the nominal yield using TIPS and breakeven data (available via FRED), and test whether the real yield component restores the structural relationship documented in the academic literature.
+
+------------------------------------------------------------------------
+
+## Perspectives — A Daily Monitoring Proposition
+
+*Disclaimer: this project is a personal and non-professional one, conducted for practice purposes. The monitoring proposition below is a technical demonstration of what a production pipeline could look like, not an investment tool.*
+
+### Rationale
+
+While the nominal yield fails as a structural predictor of gold, this limitation is itself analytically useful. **The moments when the relationship anomalously activates — or dramatically breaks down — are precisely the moments worth monitoring.** A sustained Z-score above +2σ does not signal mean-reversion; it signals that gold is decoupling from its rate environment, which is a macro observation of independent interest to any multi-asset allocator.
+
+The proposed monitor answers one question each morning:
+
+> *Is gold currently behaving as a rate-sensitive asset, or has it decoupled?*
+
+### Target audience
+
+A macro analyst or multi-asset allocator who holds gold as a portfolio component and wants a daily, low-noise signal on the current regime — not a trading signal, but a regime awareness indicator.
+
+### Production architecture
+
+The pipeline is designed to be lightweight and cost-free, running entirely on Azure free-tier services:
+
+```         
+Azure Function (timer trigger — daily, 8:00 AM CET)
+        ↓
+R script — 3 Alpha Vantage API calls → append to Parquet → Azure Blob Storage
+        ↓
+R script — recompute rolling metrics (β, R², Z-score) on updated panel
+        ↓
+Generate static HTML dashboard (plotly / htmlwidgets)
+        ↓
+Azure Static Web Apps (free tier)
+        ├── /index.html          ← daily monitor dashboard
+        └── /notebooks/          ← Quarto analytical notebooks
+```
+
+| Component       | Azure service   | Cost                    |
+|-----------------|-----------------|-------------------------|
+| Parquet storage | Blob Storage    | Free (\< 5GB)           |
+| Daily trigger   | Azure Functions | Free (\< 1M exec/month) |
+| Static hosting  | Static Web Apps | Free                    |
+| **Total**       |                 | **€0/month**            |
+
+### What the monitor shows
+
+A single page divided into four quadrants, updated each morning:
+
+| Quadrant                     | Content                                                     |
+|------------------------|------------------------------------------------|
+| **Top — Regime Status**      | Color-coded banner: Yield-driven / Decoupled / Anomaly      |
+| **Bottom left — Z-score**    | 252-day historical Z-score with ±2σ bands and today's value |
+| **Bottom center — Readings** | Current β and R² (252-day) with directional arrows          |
+| **Bottom right — Snapshot**  | Date, gold price, yield, Z-score, regime label              |
+
+### Limitations
+
+This monitor uses the nominal yield only. It does not incorporate real yield data, breakeven inflation, the DXY, or any other explanatory variable. It should be interpreted exclusively as a **regime diagnostic** — a signal that something unusual is happening in the gold/yield relationship, not an explanation of why, and certainly not a prediction of what comes next.

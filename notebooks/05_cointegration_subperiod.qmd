@@ -1,0 +1,116 @@
+---
+title: "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)"
+format: html
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+## Motivation
+
+The full-period Johansen test (2011–2026) failed to confirm
+cointegration between gold and the 10Y nominal treasury yield. However,
+visual inspection of the raw series suggests a structural break around
+2022, when gold and yields began moving simultaneously — a pattern
+inconsistent with the classical inverse relationship.
+
+This is corroborated by J.P. Morgan Private Bank (2026)[^1], which
+documents a post-2022 asymmetric regime where gold resists yield
+increases while still responding to yield decreases.
+
+[^1]: <https://privatebank.jpmorgan.com/eur/en/insights/markets-and-investing/is-it-a-golden-era-for-gold>
+
+We therefore re-run the Johansen test on the **2011–2021 sub-period**,
+isolating the classical regime before the structural break.
+
+------------------------------------------------------------------------
+
+## Setup
+
+```{r}
+library(arrow)
+library(tidyverse)
+library(urca)
+library(vars)
+
+panel <- read_parquet("../data/macro_panel.parquet")
+
+# Filter to pre-break period
+panel_pre <- panel |>
+  filter(date < as.Date("2022-01-01"))
+
+cat("Sub-period :", format(min(panel_pre$date)), 
+    "→", format(max(panel_pre$date)), "\n")
+cat("Observations :", nrow(panel_pre), "\n")
+
+y_pre <- cbind(panel_pre$gold, panel_pre$yield)
+colnames(y_pre) <- c("gold", "yield")
+```
+
+------------------------------------------------------------------------
+
+## Lag Selection
+
+```{r}
+lag_select_pre <- VARselect(y_pre, lag.max = 10, type = "const")
+optimal_lag_pre <- lag_select_pre$selection["AIC(n)"]
+
+cat("Optimal lag (AIC):", optimal_lag_pre, "\n")
+```
+
+------------------------------------------------------------------------
+
+## Johansen Test — Trace
+
+```{r}
+joh_trace_pre <- ca.jo(
+  y_pre,
+  type  = "trace",
+  ecdet = "const",
+  K     = optimal_lag_pre
+)
+
+summary(joh_trace_pre)
+```
+
+------------------------------------------------------------------------
+
+## Johansen Test — Maximum Eigenvalue
+
+```{r}
+joh_eigen_pre <- ca.jo(
+  y_pre,
+  type  = "eigen",
+  ecdet = "const",
+  K     = optimal_lag_pre
+)
+
+summary(joh_eigen_pre)
+```
+
+------------------------------------------------------------------------
+
+## Conclusion
+
+The Johansen test fails to confirm cointegration even on the pre-2022
+sub-period. Both the Trace statistic (12.50) and the Maximum Eigenvalue
+statistic (10.94) fall below their respective 5% critical values (19.96
+and 15.67), and even below the 10% thresholds.
+
+This result is analytically meaningful, and consistent with the
+theoretical limitation identified in the introduction: the nominal yield
+embeds both the real rate and inflation expectations (breakeven
+inflation rate), two forces with opposing effects on gold. Even before
+2022, this conflation is likely sufficient to prevent a stable
+cointegrating vector from emerging.
+
+A static long-run equilibrium framework is therefore inappropriate when
+working with the nominal yield as a proxy for gold's opportunity cost.
+We consequently abandon the VECM specification and pivot to a **rolling
+OLS** approach, which is better suited to capturing a relationship whose
+strength and direction evolve over time — and whose instability is
+itself the central finding of this analysis.

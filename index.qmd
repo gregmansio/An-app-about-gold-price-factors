@@ -1,0 +1,261 @@
+---
+title: "Gold Regime Monitor"
+format:
+  html:
+    theme: cosmo
+    toc: false
+    code-fold: true
+    code-tools: true
+    include-in-header:
+      text: |
+        <style>
+          /* ── Bdgwtr-inspired palette ── */
+          :root {
+            --bw-navy:    #003366;
+            --bw-slate:   #4A4A4A;
+            --bw-gold:    #C9A84C;
+            --bw-bg:      #F8F8F8;
+            --bw-green:   #2E7D32;
+            --bw-orange:  #E65100;
+            --bw-red:     #B71C1C;
+            --bw-white:   #FFFFFF;
+          }
+
+          body {
+            background-color: var(--bw-bg);
+            font-family: Georgia, serif;
+            color: var(--bw-slate);
+          }
+
+          h1.title {
+            color: var(--bw-navy);
+            font-size: 1.6rem;
+            border-bottom: 2px solid var(--bw-gold);
+            padding-bottom: 0.4rem;
+          }
+
+          /* ── Regime banner ── */
+          .regime-banner {
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .regime-yield    { background-color: #E8F5E9; color: var(--bw-green);  border-left: 6px solid var(--bw-green);  }
+          .regime-decoupled{ background-color: #FFF3E0; color: var(--bw-orange); border-left: 6px solid var(--bw-orange); }
+          .regime-anomaly  { background-color: #FFEBEE; color: var(--bw-red);    border-left: 6px solid var(--bw-red);    }
+
+          /* ── Metric cards ── */
+          .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+          }
+          .metric-card {
+            background: var(--bw-white);
+            border: 1px solid #DDD;
+            border-top: 3px solid var(--bw-navy);
+            border-radius: 4px;
+            padding: 1rem 1.5rem;
+          }
+          .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--bw-slate);
+            margin-bottom: 0.3rem;
+          }
+          .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--bw-navy);
+          }
+          .metric-arrow-up   { color: var(--bw-red);   }
+          .metric-arrow-down { color: var(--bw-green); }
+          .metric-neutral    { color: var(--bw-slate); }
+
+          /* ── Snapshot table ── */
+          .snapshot-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+          }
+          .snapshot-table th {
+            background-color: var(--bw-navy);
+            color: var(--bw-white);
+            padding: 0.5rem 1rem;
+            text-align: left;
+            font-weight: normal;
+            letter-spacing: 0.05em;
+          }
+          .snapshot-table td {
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #EEE;
+          }
+          .snapshot-table tr:last-child td {
+            font-weight: bold;
+            background-color: #F0F4F8;
+          }
+        </style>
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(arrow)
+library(tidyverse)
+library(plotly)
+library(htmltools)
+Sys.setlocale("LC_TIME", "English")
+
+# ── Load & compute ────────────────────────────────────────────────────────────
+
+panel <- read_parquet("data/macro_panel.parquet")
+
+window <- 252
+n      <- nrow(panel)
+
+results <- map_dfr((window + 1):n, function(i) {
+  fit <- lm(gold ~ yield, data = panel[(i - window):i, ])
+  tibble(
+    date  = panel$date[i],
+    beta  = coef(fit)[2],
+    r2    = summary(fit)$r.squared,
+    resid = tail(residuals(fit), 1)
+  )
+}) |>
+  mutate(
+    resid_mean = mean(resid, na.rm = TRUE),
+    resid_sd   = sd(resid, na.rm = TRUE),
+    z_score    = (resid - resid_mean) / resid_sd
+  )
+
+# ── Today's metrics ───────────────────────────────────────────────────────────
+
+today      <- tail(results, 1)
+last_date  <- format(today$date, "%B %d, %Y")
+z_today    <- round(today$z_score, 2)
+beta_today <- round(today$beta, 1)
+r2_today   <- round(today$r2, 3)
+gold_today <- round(tail(panel$gold, 1), 1)
+yield_today<- round(tail(panel$yield, 1), 2)
+
+# ── Regime classification ─────────────────────────────────────────────────────
+
+regime <- case_when(
+  abs(z_today) > 2              ~ "anomaly",
+  r2_today > 0.4 & beta_today < 0 ~ "yield",
+  TRUE                           ~ "decoupled"
+)
+
+regime_label <- switch(regime,
+  anomaly   = "🔴 Anomaly — Gold is operating outside its historical range relative to yields",
+  yield     = "🟢 Yield-driven — The gold/yield relationship is currently active",
+  decoupled = "🟠 Decoupled — Nominal yield has limited explanatory power over gold"
+)
+
+regime_class <- switch(regime,
+  anomaly   = "regime-banner regime-anomaly",
+  yield     = "regime-banner regime-yield",
+  decoupled = "regime-banner regime-decoupled"
+)
+
+# ── Beta arrow ────────────────────────────────────────────────────────────────
+
+beta_prev  <- tail(results, 2)$beta[1]
+beta_arrow <- case_when(
+  beta_today > beta_prev ~ '<span class="metric-arrow-up">▲</span>',
+  beta_today < beta_prev ~ '<span class="metric-arrow-down">▼</span>',
+  TRUE                   ~ '<span class="metric-neutral">—</span>'
+)
+
+r2_prev  <- tail(results, 2)$r2[1]
+r2_arrow <- case_when(
+  r2_today > r2_prev ~ '<span class="metric-arrow-up">▲</span>',
+  r2_today < r2_prev ~ '<span class="metric-arrow-down">▼</span>',
+  TRUE               ~ '<span class="metric-neutral">—</span>'
+)
+```
+
+```{r}
+# ── Regime banner ─────────────────────────────────────────────────────────────
+
+div(class = regime_class,
+  span(regime_label),
+  span(style = "font-size:0.85rem; font-weight:normal;",
+       paste("Last updated:", last_date))
+) |> tagList() |> browsable()
+```
+
+```{r}
+# ── Z-score chart ─────────────────────────────────────────────────────────────
+
+plot_ly(results, x = ~date) |>
+  add_lines(y = ~z_score,
+            line = list(color = "#003366", width = 1.5),
+            name = "Z-score") |>
+  add_lines(y = rep(2,  nrow(results)), line = list(color = "#B71C1C", dash = "dash", width = 1), name = "+2σ") |>
+  add_lines(y = rep(-2, nrow(results)), line = list(color = "#2E7D32", dash = "dash", width = 1), name = "-2σ") |>
+  add_lines(y = rep(0,  nrow(results)), line = list(color = "#AAA",    dash = "dot",  width = 1), showlegend = FALSE) |>
+  add_markers(x = today$date, y = z_today,
+              marker = list(color = "#C9A84C", size = 10, symbol = "circle"),
+              name = "Today") |>
+  layout(
+    title  = list(text = "Residual Z-score — 252-day rolling window", font = list(family = "Georgia", color = "#003366")),
+    xaxis  = list(title = "", showgrid = FALSE),
+    yaxis  = list(title = "Z-score", zeroline = FALSE),
+    paper_bgcolor = "#F8F8F8",
+    plot_bgcolor  = "#F8F8F8",
+    legend = list(orientation = "h", y = -0.15),
+    font   = list(family = "Georgia", color = "#4A4A4A")
+  )
+```
+
+```{r}
+# ── Metric cards + snapshot ───────────────────────────────────────────────────
+
+tagList(
+  div(class = "metrics-row",
+    div(class = "metric-card",
+      div(class = "metric-label", "Rolling β (252d)"),
+      div(class = "metric-value", beta_today)
+    ),
+    div(class = "metric-card",
+      div(class = "metric-label", "Rolling R² (252d)"),
+      div(class = "metric-value",
+          HTML(paste0(r2_today, " ", r2_arrow)))
+    )
+  ),
+  tags$table(class = "snapshot-table",
+    tags$thead(
+      tags$tr(
+        tags$th("Date"), tags$th("Gold (USD/oz)"),
+        tags$th("10Y Yield (%)"), tags$th("Z-score"), tags$th("Regime")
+      )
+    ),
+    tags$tbody(
+      map(seq(max(1, nrow(results)-4), nrow(results)), function(i) {
+        r <- results[i, ]
+        tags$tr(
+          tags$td(format(r$date, "%Y-%m-%d")),
+          tags$td(round(panel$gold[i + window], 1)),
+          tags$td(round(panel$yield[i + window], 2)),
+          tags$td(round(r$z_score, 2)),
+          tags$td(case_when(
+            abs(r$z_score) > 2              ~ "Anomaly",
+            r$r2 > 0.4 & r$beta < 0         ~ "Yield-driven",
+            TRUE                             ~ "Decoupled"
+          ))
+        )
+      })
+    )
+  )
+) |> browsable()
+```

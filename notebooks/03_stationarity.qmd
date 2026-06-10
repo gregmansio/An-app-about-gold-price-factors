@@ -1,6 +1,5 @@
 ---
 title: "Gold & Treasury Yields — Stationarity Testing"
-author: "Gregoire MANSIO"
 format: html
 execute:
   echo: true
@@ -10,7 +9,7 @@ execute:
 
 ## Why Stationarity Matters
 
-Before testing for any long-run relationship between gold and Treasury yields, we need 
+Before testing for any long-run relationship between gold and nominal treasury yields, we need 
 to establish the order of integration of each series.
 
 A series is said to be **stationary** (I(0)) if it fluctuates around a constant mean 

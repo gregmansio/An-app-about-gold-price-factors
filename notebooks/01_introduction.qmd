@@ -1,0 +1,92 @@
+---
+title: "Gold & Treasury Yields — Introduction"
+author: "Gregoire MANSIO"
+format: html
+---
+
+## Motivation
+
+Gold is one of the most studied assets in macroeconomic finance. Unlike equities or bonds, it generates no cash flow — no dividend, no coupon. Its value is therefore largely driven by opportunity cost: what an investor gives up by holding gold instead of a yield-bearing asset.
+
+The academic literature consistently points to the **real 10Y Treasury yield** (nominal yield minus inflation expectations) as the canonical driver of this opportunity cost. When real yields rise, the relative attractiveness of gold falls, and vice versa. This theoretical relationship is well established:
+
+-   **Jermann (2023, NBER)**: a no-arbitrage pricing model calibrated on 10Y real US Treasury rates successfully replicates gold price fluctuations since 2007.
+-   **Federal Reserve Bank of Chicago (2021)**: a 1 percentage point rise in the long-term real rate is associated with a 13.1% decline in the real gold price over the period 1971–2021.
+-   **J.P. Morgan Private Bank (2026)**: documents a structural break post-2022, where even the real yield relationship weakened — gold became asymmetrically reactive, rising when yields fall but resisting when yields rise.
+
+However, the real yield requires inflation expectations data — typically derived from TIPS spreads — which introduces additional complexity and data dependencies. The **nominal 10Y Treasury yield**, by contrast, is universally available, instantly observable, and widely monitored by market participants.
+
+This raises a practical and empirically interesting question:
+
+> **Is the nominal 10Y Treasury yield a good indicator of gold prices?**
+
+This is distinct from the theoretical question of whether *real* yields drive gold. It asks whether the nominal yield — which embeds both the real rate and inflation expectations (i.e breakeven inflation rate)— retains enough signal to track gold in practice. If it does, it simplifies the analytical framework considerably. If it does not, understanding *why* it fails is itself informative.
+
+This project investigates this question empirically using daily data from June 2011 to June 2026, sourced from the Alpha Vantage API.
+
+*Disclaimer : This project is a personal and non-professional one, conducted for practice purposes.*
+
+------------------------------------------------------------------------
+
+## Hypotheses
+
+### H1 — Long-run equilibrium relationship
+
+The nominal 10Y US Treasury yield is a significant negative predictor of the gold price, and a stable long-run cointegrating relationship exists between the two series.
+
+Formally, if both series are integrated of order 1 — i.e. I(1) — we expect to find at least one cointegrating vector such that:
+
+$$\text{Gold}_t = \alpha + \beta \cdot \text{NominalYield}_t + \varepsilon_t$$
+
+where $\varepsilon_t$ is stationary, and $\beta < 0$.
+
+### H2 — Mean-reverting residual
+
+The residual $\varepsilon_t$ from the long-run relationship is mean-reverting. Deviations from equilibrium are temporary and self-correcting.
+
+This implies that when gold is overpriced relative to what the nominal yield level implies, it will tend to revert downward — and vice versa. The normalized residual therefore constitutes an analytical signal:
+
+$$z_t = \frac{\varepsilon_t - \mu_\varepsilon}{\sigma_\varepsilon}$$
+
+$$z_t > +2 \Rightarrow \text{gold expensive relative to nominal yields}$$ $$z_t < -2 \Rightarrow \text{gold cheap relative to nominal yields}$$
+
+------------------------------------------------------------------------
+
+## Why the Nominal Yield May Fall Short
+
+The nominal yield is the sum of two components:
+
+$$\text{Nominal Yield} = \text{Real Yield} + \text{Breakeven inflation rate}$$
+
+Both components have opposing effects on gold: - **Real yield ↑** → gold less attractive (opportunity cost rises) → gold ↓ - **Inflation expectations ↑** → gold more attractive (inflation hedge) → gold ↑
+
+When inflation is rising, both the nominal yield and gold can increase simultaneously — creating a positive correlation that masks or reverses the theoretical negative relationship. This is precisely the dynamic observed post-2022, and it is a structural limitation of using the nominal yield as a proxy.
+
+Understanding this mechanism will allow us to interpret our empirical results in context.
+
+------------------------------------------------------------------------
+
+## Analytical Framework
+
+The analysis proceeds in four steps:
+
+1.  **Stationarity testing** — Augmented Dickey-Fuller (ADF) tests on each series in level and first difference, to confirm both are I(1).
+
+2.  **Cointegration testing** — Johansen test on the full period (2011–2026) and the pre-break sub-period (2011–2021), to determine whether a stable long-run equilibrium exists.
+
+3.  **Rolling OLS** — Estimation of $\beta$ on rolling windows of 60, 252, and 504 days to assess the time-varying nature of the relationship and its robustness across window sizes.
+
+4.  **Regime diagnostic** — Z-score analysis of rolling residuals to identify periods where gold is operating within vs. beyond its historically normal range relative to nominal yields.
+
+------------------------------------------------------------------------
+
+## Data
+
+| Series                    | Source        | Endpoint              | Frequency |
+|---------------------------|---------------|-----------------------|-----------|
+| Gold price (USD/oz)       | Alpha Vantage | `GOLD_SILVER_HISTORY` | Daily     |
+| 10Y US Treasury Yield (%) | Alpha Vantage | `TREASURY_YIELD`      | Daily     |
+
+Sample period: **June 1, 2011 — June 1, 2026** — 3,704 observations.
+
+Note: all yield data used in this analysis refers to the **nominal** 10Y Treasury yield. The implications of this choice — and its limitations relative to the real yield — are discussed throughout the analysis.

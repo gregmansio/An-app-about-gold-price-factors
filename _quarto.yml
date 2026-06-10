@@ -1,0 +1,38 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Gold & Treasury Yields"
+  page-footer: "*Part of this content has been generated with the help of AI.*"
+  navbar:
+    left:
+      - text: "Introduction"
+        href: notebooks/01_introduction.qmd
+      - text: "Descriptive statistics"
+        href: notebooks/02_stat_des.qmd
+      - text: "Analysis"
+        menu:
+          - text: "Stationarity Testing"
+            href: notebooks/03_stationarity.qmd
+          - text: "Cointegration — Full Period"
+            href: notebooks/04_cointegration.qmd
+          - text: "Cointegration — Sub-period"
+            href: notebooks/05_cointegration_subperiod.qmd
+          - text: "Rolling OLS"
+            href: notebooks/06_rolling_ols.qmd
+      - text: "Conclusion"
+        href: notebooks/07_conclusion.qmd
+      - text: "Monitor"
+        href: index.html
+
+format:
+  html:
+    theme: cosmo
+    background-color: "#F8F8F8"
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    smooth-scroll: true
+    code-fold: true
+    code-tools: true

@@ -1,6 +1,5 @@
 ---
 title: "Gold & Treasury Yields — Descriptive Statistics"
-author: "Gregoire MANSIO"
 format: html
 execute:
   echo: true
@@ -14,7 +13,7 @@ execute:
 library(arrow)
 library(tidyverse)
 
-panel <- read_parquet("data/macro_panel.parquet")
+panel <- read_parquet("../data/macro_panel.parquet")
 
 glimpse(panel)
 ```

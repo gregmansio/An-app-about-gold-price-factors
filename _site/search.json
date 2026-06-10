@@ -1,0 +1,324 @@
+[
+  {
+    "objectID": "notebooks/07_conclusion.html",
+    "href": "notebooks/07_conclusion.html",
+    "title": "Gold & Treasury Yields — Conclusion & Perspectives",
+    "section": "",
+    "text": "This project investigated whether the nominal 10Y US Treasury yield constitutes a reliable indicator of gold prices, using daily data from June 2011 to June 2026. The question was deliberately framed around the nominal yield — rather than the theoretically superior real yield — to assess the practical signal value of the most immediately observable rate.\nThe empirical evidence is clear: the nominal yield does not structurally explain gold prices. Cointegration tests fail on both the full period and the pre-2022 sub-period, and rolling OLS estimates confirm that explanatory power is episodic at best — activating in specific low-inflation macro regimes (notably 2014–2016 and 2018–2022) and collapsing elsewhere. The Z-score analysis further reveals that gold has been operating in historically anomalous territory since 2024, driven by factors that lie outside the scope of this analysis and that the nominal yield alone cannot capture.\nThis result is not a failure — it is informative. The nominal yield conflates the real rate and breakeven inflation, two forces with opposing effects on gold. Its inability to track gold consistently is precisely what the Fisher decomposition predicts:\n\\[\\text{Nominal Yield} = \\text{Real Yield} + \\text{Breakeven Inflation Rate}\\]\nA natural extension of this work would be to decompose the nominal yield using TIPS and breakeven data (available via FRED), and test whether the real yield component restores the structural relationship documented in the academic literature."
+  },
+  {
+    "objectID": "notebooks/07_conclusion.html#conclusion",
+    "href": "notebooks/07_conclusion.html#conclusion",
+    "title": "Gold & Treasury Yields — Conclusion & Perspectives",
+    "section": "",
+    "text": "This project investigated whether the nominal 10Y US Treasury yield constitutes a reliable indicator of gold prices, using daily data from June 2011 to June 2026. The question was deliberately framed around the nominal yield — rather than the theoretically superior real yield — to assess the practical signal value of the most immediately observable rate.\nThe empirical evidence is clear: the nominal yield does not structurally explain gold prices. Cointegration tests fail on both the full period and the pre-2022 sub-period, and rolling OLS estimates confirm that explanatory power is episodic at best — activating in specific low-inflation macro regimes (notably 2014–2016 and 2018–2022) and collapsing elsewhere. The Z-score analysis further reveals that gold has been operating in historically anomalous territory since 2024, driven by factors that lie outside the scope of this analysis and that the nominal yield alone cannot capture.\nThis result is not a failure — it is informative. The nominal yield conflates the real rate and breakeven inflation, two forces with opposing effects on gold. Its inability to track gold consistently is precisely what the Fisher decomposition predicts:\n\\[\\text{Nominal Yield} = \\text{Real Yield} + \\text{Breakeven Inflation Rate}\\]\nA natural extension of this work would be to decompose the nominal yield using TIPS and breakeven data (available via FRED), and test whether the real yield component restores the structural relationship documented in the academic literature."
+  },
+  {
+    "objectID": "notebooks/07_conclusion.html#perspectives-a-daily-monitoring-proposition",
+    "href": "notebooks/07_conclusion.html#perspectives-a-daily-monitoring-proposition",
+    "title": "Gold & Treasury Yields — Conclusion & Perspectives",
+    "section": "Perspectives — A Daily Monitoring Proposition",
+    "text": "Perspectives — A Daily Monitoring Proposition\nDisclaimer: this project is a personal and non-professional one, conducted for practice purposes. The monitoring proposition below is a technical demonstration of what a production pipeline could look like, not an investment tool.\n\nRationale\nWhile the nominal yield fails as a structural predictor of gold, this limitation is itself analytically useful. The moments when the relationship anomalously activates — or dramatically breaks down — are precisely the moments worth monitoring. A sustained Z-score above +2σ does not signal mean-reversion; it signals that gold is decoupling from its rate environment, which is a macro observation of independent interest to any multi-asset allocator.\nThe proposed monitor answers one question each morning:\n\nIs gold currently behaving as a rate-sensitive asset, or has it decoupled?\n\n\n\nTarget audience\nA macro analyst or multi-asset allocator who holds gold as a portfolio component and wants a daily, low-noise signal on the current regime — not a trading signal, but a regime awareness indicator.\n\n\nProduction architecture\nThe pipeline is designed to be lightweight and cost-free, running entirely on Azure free-tier services:\nAzure Function (timer trigger — daily, 8:00 AM CET)\n        ↓\nR script — 3 Alpha Vantage API calls → append to Parquet → Azure Blob Storage\n        ↓\nR script — recompute rolling metrics (β, R², Z-score) on updated panel\n        ↓\nGenerate static HTML dashboard (plotly / htmlwidgets)\n        ↓\nAzure Static Web Apps (free tier)\n        ├── /index.html          ← daily monitor dashboard\n        └── /notebooks/          ← Quarto analytical notebooks\n\n\n\nComponent\nAzure service\nCost\n\n\n\n\nParquet storage\nBlob Storage\nFree (&lt; 5GB)\n\n\nDaily trigger\nAzure Functions\nFree (&lt; 1M exec/month)\n\n\nStatic hosting\nStatic Web Apps\nFree\n\n\nTotal\n\n€0/month\n\n\n\n\n\nWhat the monitor shows\nA single page divided into four quadrants, updated each morning:\n\n\n\n\n\n\n\nQuadrant\nContent\n\n\n\n\nTop — Regime Status\nColor-coded banner: Yield-driven / Decoupled / Anomaly\n\n\nBottom left — Z-score\n252-day historical Z-score with ±2σ bands and today’s value\n\n\nBottom center — Readings\nCurrent β and R² (252-day) with directional arrows\n\n\nBottom right — Snapshot\nDate, gold price, yield, Z-score, regime label\n\n\n\n\n\nLimitations\nThis monitor uses the nominal yield only. It does not incorporate real yield data, breakeven inflation, the DXY, or any other explanatory variable. It should be interpreted exclusively as a regime diagnostic — a signal that something unusual is happening in the gold/yield relationship, not an explanation of why, and certainly not a prediction of what comes next."
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html",
+    "href": "notebooks/05_cointegration_subperiod.html",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "",
+    "text": "The full-period Johansen test (2011–2026) failed to confirm cointegration between gold and the 10Y nominal treasury yield. However, visual inspection of the raw series suggests a structural break around 2022, when gold and yields began moving simultaneously — a pattern inconsistent with the classical inverse relationship.\nThis is corroborated by J.P. Morgan Private Bank (2026)1, which documents a post-2022 asymmetric regime where gold resists yield increases while still responding to yield decreases.\nWe therefore re-run the Johansen test on the 2011–2021 sub-period, isolating the classical regime before the structural break."
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#motivation",
+    "href": "notebooks/05_cointegration_subperiod.html#motivation",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "",
+    "text": "The full-period Johansen test (2011–2026) failed to confirm cointegration between gold and the 10Y nominal treasury yield. However, visual inspection of the raw series suggests a structural break around 2022, when gold and yields began moving simultaneously — a pattern inconsistent with the classical inverse relationship.\nThis is corroborated by J.P. Morgan Private Bank (2026)1, which documents a post-2022 asymmetric regime where gold resists yield increases while still responding to yield decreases.\nWe therefore re-run the Johansen test on the 2011–2021 sub-period, isolating the classical regime before the structural break."
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#setup",
+    "href": "notebooks/05_cointegration_subperiod.html#setup",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Setup",
+    "text": "Setup\n\n\nCode\nlibrary(arrow)\nlibrary(tidyverse)\nlibrary(urca)\nlibrary(vars)\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")\n\n# Filter to pre-break period\npanel_pre &lt;- panel |&gt;\n  filter(date &lt; as.Date(\"2022-01-01\"))\n\ncat(\"Sub-period :\", format(min(panel_pre$date)), \n    \"→\", format(max(panel_pre$date)), \"\\n\")\n\n\nSub-period : 2011-06-01 → 2021-12-31 \n\n\nCode\ncat(\"Observations :\", nrow(panel_pre), \"\\n\")\n\n\nObservations : 2625 \n\n\nCode\ny_pre &lt;- cbind(panel_pre$gold, panel_pre$yield)\ncolnames(y_pre) &lt;- c(\"gold\", \"yield\")"
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#lag-selection",
+    "href": "notebooks/05_cointegration_subperiod.html#lag-selection",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Lag Selection",
+    "text": "Lag Selection\n\n\nCode\nlag_select_pre &lt;- VARselect(y_pre, lag.max = 10, type = \"const\")\noptimal_lag_pre &lt;- lag_select_pre$selection[\"AIC(n)\"]\n\ncat(\"Optimal lag (AIC):\", optimal_lag_pre, \"\\n\")\n\n\nOptimal lag (AIC): 3"
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#johansen-test-trace",
+    "href": "notebooks/05_cointegration_subperiod.html#johansen-test-trace",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Johansen Test — Trace",
+    "text": "Johansen Test — Trace\n\n\nCode\njoh_trace_pre &lt;- ca.jo(\n  y_pre,\n  type  = \"trace\",\n  ecdet = \"const\",\n  K     = optimal_lag_pre\n)\n\nsummary(joh_trace_pre)\n\n\n\n###################### \n# Johansen-Procedure # \n###################### \n\nTest type: trace statistic , without linear trend and constant in cointegration \n\nEigenvalues (lambda):\n[1] 4.164874e-03 5.949233e-04 7.124665e-20\n\nValues of teststatistic and critical values of test:\n\n          test 10pct  5pct  1pct\nr &lt;= 1 |  1.56  7.52  9.24 12.97\nr = 0  | 12.50 17.85 19.96 24.60\n\nEigenvectors, normalised to first column:\n(These are the cointegration relations)\n\n            gold.l3    yield.l3    constant\ngold.l3      1.0000     1.00000    1.000000\nyield.l3   510.7301   -39.54159 -309.909600\nconstant -2461.9695 -1477.57602   -7.725239\n\nWeights W:\n(This is the loading matrix)\n\n              gold.l3      yield.l3      constant\ngold.d  -1.764824e-03 -1.165891e-03 -1.418873e-18\nyield.d -1.038562e-05  2.538195e-06 -3.178758e-21"
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#johansen-test-maximum-eigenvalue",
+    "href": "notebooks/05_cointegration_subperiod.html#johansen-test-maximum-eigenvalue",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Johansen Test — Maximum Eigenvalue",
+    "text": "Johansen Test — Maximum Eigenvalue\n\n\nCode\njoh_eigen_pre &lt;- ca.jo(\n  y_pre,\n  type  = \"eigen\",\n  ecdet = \"const\",\n  K     = optimal_lag_pre\n)\n\nsummary(joh_eigen_pre)\n\n\n\n###################### \n# Johansen-Procedure # \n###################### \n\nTest type: maximal eigenvalue statistic (lambda max) , without linear trend and constant in cointegration \n\nEigenvalues (lambda):\n[1] 4.164874e-03 5.949233e-04 7.124665e-20\n\nValues of teststatistic and critical values of test:\n\n          test 10pct  5pct  1pct\nr &lt;= 1 |  1.56  7.52  9.24 12.97\nr = 0  | 10.94 13.75 15.67 20.20\n\nEigenvectors, normalised to first column:\n(These are the cointegration relations)\n\n            gold.l3    yield.l3    constant\ngold.l3      1.0000     1.00000    1.000000\nyield.l3   510.7301   -39.54159 -309.909600\nconstant -2461.9695 -1477.57602   -7.725239\n\nWeights W:\n(This is the loading matrix)\n\n              gold.l3      yield.l3      constant\ngold.d  -1.764824e-03 -1.165891e-03 -1.418873e-18\nyield.d -1.038562e-05  2.538195e-06 -3.178758e-21"
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#conclusion",
+    "href": "notebooks/05_cointegration_subperiod.html#conclusion",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Conclusion",
+    "text": "Conclusion\nThe Johansen test fails to confirm cointegration even on the pre-2022 sub-period. Both the Trace statistic (12.50) and the Maximum Eigenvalue statistic (10.94) fall below their respective 5% critical values (19.96 and 15.67), and even below the 10% thresholds.\nThis result is analytically meaningful, and consistent with the theoretical limitation identified in the introduction: the nominal yield embeds both the real rate and inflation expectations (breakeven inflation rate), two forces with opposing effects on gold. Even before 2022, this conflation is likely sufficient to prevent a stable cointegrating vector from emerging.\nA static long-run equilibrium framework is therefore inappropriate when working with the nominal yield as a proxy for gold’s opportunity cost. We consequently abandon the VECM specification and pivot to a rolling OLS approach, which is better suited to capturing a relationship whose strength and direction evolve over time — and whose instability is itself the central finding of this analysis."
+  },
+  {
+    "objectID": "notebooks/05_cointegration_subperiod.html#footnotes",
+    "href": "notebooks/05_cointegration_subperiod.html#footnotes",
+    "title": "Gold & Treasury Yields — Cointegration Testing (Sub-period 2011–2021)",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nhttps://privatebank.jpmorgan.com/eur/en/insights/markets-and-investing/is-it-a-golden-era-for-gold↩︎"
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html",
+    "href": "notebooks/03_stationarity.html",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "",
+    "text": "Before testing for any long-run relationship between gold and nominal treasury yields, we need to establish the order of integration of each series.\nA series is said to be stationary (I(0)) if it fluctuates around a constant mean with constant variance over time. A series is integrated of order 1 (I(1)) if it is non-stationary in level but becomes stationary after taking first differences.\nCointegration — and the VECM that follows — requires both series to be I(1). If one series is I(0) and the other I(1), the framework collapses.\nThe Augmented Dickey-Fuller (ADF) test is a standard tool for this. It tests the null hypothesis of a unit root (non-stationarity) against the alternative of stationarity.\n\\[H_0: \\text{series has a unit root (non-stationary)}\\] \\[H_1: \\text{series is stationary}\\]\nA p-value below 0.05 leads us to reject \\(H_0\\) and conclude stationarity."
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html#why-stationarity-matters",
+    "href": "notebooks/03_stationarity.html#why-stationarity-matters",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "",
+    "text": "Before testing for any long-run relationship between gold and nominal treasury yields, we need to establish the order of integration of each series.\nA series is said to be stationary (I(0)) if it fluctuates around a constant mean with constant variance over time. A series is integrated of order 1 (I(1)) if it is non-stationary in level but becomes stationary after taking first differences.\nCointegration — and the VECM that follows — requires both series to be I(1). If one series is I(0) and the other I(1), the framework collapses.\nThe Augmented Dickey-Fuller (ADF) test is a standard tool for this. It tests the null hypothesis of a unit root (non-stationarity) against the alternative of stationarity.\n\\[H_0: \\text{series has a unit root (non-stationary)}\\] \\[H_1: \\text{series is stationary}\\]\nA p-value below 0.05 leads us to reject \\(H_0\\) and conclude stationarity."
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html#setup",
+    "href": "notebooks/03_stationarity.html#setup",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "Setup",
+    "text": "Setup\n\n\nCode\nlibrary(arrow)\nlibrary(tidyverse)\nlibrary(tseries)   # adf.test()\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")"
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html#adf-tests-levels",
+    "href": "notebooks/03_stationarity.html#adf-tests-levels",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "ADF Tests — Levels",
+    "text": "ADF Tests — Levels\nWe first test each series in level. We expect to fail to reject \\(H_0\\) — i.e. both series should appear non-stationary in level.\n\n\nCode\nadf_gold_level &lt;- adf.test(panel$gold)\nadf_yield_level &lt;- adf.test(panel$yield)\n\ntibble(\n  Series     = c(\"Gold (level)\", \"Yield (level)\"),\n  Statistic  = c(adf_gold_level$statistic, adf_yield_level$statistic),\n  P_value    = c(adf_gold_level$p.value, adf_yield_level$p.value),\n  Conclusion = c(\n    ifelse(adf_gold_level$p.value  &lt; 0.05, \"Stationary I(0)\", \"Non-stationary I(1)\"),\n    ifelse(adf_yield_level$p.value &lt; 0.05, \"Stationary I(0)\", \"Non-stationary I(1)\")\n  )\n) |&gt;\n  knitr::kable(digits = 3)\n\n\n\n\n\nSeries\nStatistic\nP_value\nConclusion\n\n\n\n\nGold (level)\n0.544\n0.990\nNon-stationary I(1)\n\n\nYield (level)\n-2.005\n0.576\nNon-stationary I(1)"
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html#adf-tests-first-differences",
+    "href": "notebooks/03_stationarity.html#adf-tests-first-differences",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "ADF Tests — First Differences",
+    "text": "ADF Tests — First Differences\nWe now test the first differences. We expect to reject \\(H_0\\) — both differenced series should be stationary.\n\n\nCode\nadf_gold_diff  &lt;- adf.test(diff(panel$gold))\nadf_yield_diff &lt;- adf.test(diff(panel$yield))\n\ntibble(\n  Series     = c(\"Gold (1st diff)\", \"Yield (1st diff)\"),\n  Statistic  = c(adf_gold_diff$statistic, adf_yield_diff$statistic),\n  P_value    = c(adf_gold_diff$p.value, adf_yield_diff$p.value),\n  Conclusion = c(\n    ifelse(adf_gold_diff$p.value  &lt; 0.05, \"Stationary I(0)\", \"Non-stationary I(1)\"),\n    ifelse(adf_yield_diff$p.value &lt; 0.05, \"Stationary I(0)\", \"Non-stationary I(1)\")\n  )\n) |&gt;\n  knitr::kable(digits = 3)\n\n\n\n\n\nSeries\nStatistic\nP_value\nConclusion\n\n\n\n\nGold (1st diff)\n-17.364\n0.01\nStationary I(0)\n\n\nYield (1st diff)\n-14.883\n0.01\nStationary I(0)"
+  },
+  {
+    "objectID": "notebooks/03_stationarity.html#interpretation",
+    "href": "notebooks/03_stationarity.html#interpretation",
+    "title": "Gold & Treasury Yields — Stationarity Testing",
+    "section": "Interpretation",
+    "text": "Interpretation\nBoth series are I(1) in level with p-values of 0.990 for Gold and 0.565 for the 10µyears yield. They also are I(0) in first difference with very strong p-values rejections (both at 0,01).\nThe condition for cointegration testing is met and we can proceed to the Johansen test in the next step."
+  },
+  {
+    "objectID": "notebooks/01_introduction.html",
+    "href": "notebooks/01_introduction.html",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "",
+    "text": "Gold is one of the most studied assets in macroeconomic finance. Unlike equities or bonds, it generates no cash flow — no dividend, no coupon. Its value is therefore largely driven by opportunity cost: what an investor gives up by holding gold instead of a yield-bearing asset.\nThe academic literature consistently points to the real 10Y Treasury yield (nominal yield minus inflation expectations) as the canonical driver of this opportunity cost. When real yields rise, the relative attractiveness of gold falls, and vice versa. This theoretical relationship is well established:\n\nJermann (2023, NBER): a no-arbitrage pricing model calibrated on 10Y real US Treasury rates successfully replicates gold price fluctuations since 2007.\nFederal Reserve Bank of Chicago (2021): a 1 percentage point rise in the long-term real rate is associated with a 13.1% decline in the real gold price over the period 1971–2021.\nJ.P. Morgan Private Bank (2026): documents a structural break post-2022, where even the real yield relationship weakened — gold became asymmetrically reactive, rising when yields fall but resisting when yields rise.\n\nHowever, the real yield requires inflation expectations data — typically derived from TIPS spreads — which introduces additional complexity and data dependencies. The nominal 10Y Treasury yield, by contrast, is universally available, instantly observable, and widely monitored by market participants.\nThis raises a practical and empirically interesting question:\n\nIs the nominal 10Y Treasury yield a good indicator of gold prices?\n\nThis is distinct from the theoretical question of whether real yields drive gold. It asks whether the nominal yield — which embeds both the real rate and inflation expectations (i.e breakeven inflation rate)— retains enough signal to track gold in practice. If it does, it simplifies the analytical framework considerably. If it does not, understanding why it fails is itself informative.\nThis project investigates this question empirically using daily data from June 2011 to June 2026, sourced from the Alpha Vantage API.\nDisclaimer : This project is a personal and non-professional one, conducted for practice purposes."
+  },
+  {
+    "objectID": "notebooks/01_introduction.html#motivation",
+    "href": "notebooks/01_introduction.html#motivation",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "",
+    "text": "Gold is one of the most studied assets in macroeconomic finance. Unlike equities or bonds, it generates no cash flow — no dividend, no coupon. Its value is therefore largely driven by opportunity cost: what an investor gives up by holding gold instead of a yield-bearing asset.\nThe academic literature consistently points to the real 10Y Treasury yield (nominal yield minus inflation expectations) as the canonical driver of this opportunity cost. When real yields rise, the relative attractiveness of gold falls, and vice versa. This theoretical relationship is well established:\n\nJermann (2023, NBER): a no-arbitrage pricing model calibrated on 10Y real US Treasury rates successfully replicates gold price fluctuations since 2007.\nFederal Reserve Bank of Chicago (2021): a 1 percentage point rise in the long-term real rate is associated with a 13.1% decline in the real gold price over the period 1971–2021.\nJ.P. Morgan Private Bank (2026): documents a structural break post-2022, where even the real yield relationship weakened — gold became asymmetrically reactive, rising when yields fall but resisting when yields rise.\n\nHowever, the real yield requires inflation expectations data — typically derived from TIPS spreads — which introduces additional complexity and data dependencies. The nominal 10Y Treasury yield, by contrast, is universally available, instantly observable, and widely monitored by market participants.\nThis raises a practical and empirically interesting question:\n\nIs the nominal 10Y Treasury yield a good indicator of gold prices?\n\nThis is distinct from the theoretical question of whether real yields drive gold. It asks whether the nominal yield — which embeds both the real rate and inflation expectations (i.e breakeven inflation rate)— retains enough signal to track gold in practice. If it does, it simplifies the analytical framework considerably. If it does not, understanding why it fails is itself informative.\nThis project investigates this question empirically using daily data from June 2011 to June 2026, sourced from the Alpha Vantage API.\nDisclaimer : This project is a personal and non-professional one, conducted for practice purposes."
+  },
+  {
+    "objectID": "notebooks/01_introduction.html#hypotheses",
+    "href": "notebooks/01_introduction.html#hypotheses",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "Hypotheses",
+    "text": "Hypotheses\n\nH1 — Long-run equilibrium relationship\nThe nominal 10Y US Treasury yield is a significant negative predictor of the gold price, and a stable long-run cointegrating relationship exists between the two series.\nFormally, if both series are integrated of order 1 — i.e. I(1) — we expect to find at least one cointegrating vector such that:\n\\[\\text{Gold}_t = \\alpha + \\beta \\cdot \\text{NominalYield}_t + \\varepsilon_t\\]\nwhere \\(\\varepsilon_t\\) is stationary, and \\(\\beta &lt; 0\\).\n\n\nH2 — Mean-reverting residual\nThe residual \\(\\varepsilon_t\\) from the long-run relationship is mean-reverting. Deviations from equilibrium are temporary and self-correcting.\nThis implies that when gold is overpriced relative to what the nominal yield level implies, it will tend to revert downward — and vice versa. The normalized residual therefore constitutes an analytical signal:\n\\[z_t = \\frac{\\varepsilon_t - \\mu_\\varepsilon}{\\sigma_\\varepsilon}\\]\n\\[z_t &gt; +2 \\Rightarrow \\text{gold expensive relative to nominal yields}\\] \\[z_t &lt; -2 \\Rightarrow \\text{gold cheap relative to nominal yields}\\]"
+  },
+  {
+    "objectID": "notebooks/01_introduction.html#why-the-nominal-yield-may-fall-short",
+    "href": "notebooks/01_introduction.html#why-the-nominal-yield-may-fall-short",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "Why the Nominal Yield May Fall Short",
+    "text": "Why the Nominal Yield May Fall Short\nThe nominal yield is the sum of two components:\n\\[\\text{Nominal Yield} = \\text{Real Yield} + \\text{Breakeven inflation rate}\\]\nBoth components have opposing effects on gold: - Real yield ↑ → gold less attractive (opportunity cost rises) → gold ↓ - Inflation expectations ↑ → gold more attractive (inflation hedge) → gold ↑\nWhen inflation is rising, both the nominal yield and gold can increase simultaneously — creating a positive correlation that masks or reverses the theoretical negative relationship. This is precisely the dynamic observed post-2022, and it is a structural limitation of using the nominal yield as a proxy.\nUnderstanding this mechanism will allow us to interpret our empirical results in context."
+  },
+  {
+    "objectID": "notebooks/01_introduction.html#analytical-framework",
+    "href": "notebooks/01_introduction.html#analytical-framework",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "Analytical Framework",
+    "text": "Analytical Framework\nThe analysis proceeds in four steps:\n\nStationarity testing — Augmented Dickey-Fuller (ADF) tests on each series in level and first difference, to confirm both are I(1).\nCointegration testing — Johansen test on the full period (2011–2026) and the pre-break sub-period (2011–2021), to determine whether a stable long-run equilibrium exists.\nRolling OLS — Estimation of \\(\\beta\\) on rolling windows of 60, 252, and 504 days to assess the time-varying nature of the relationship and its robustness across window sizes.\nRegime diagnostic — Z-score analysis of rolling residuals to identify periods where gold is operating within vs. beyond its historically normal range relative to nominal yields."
+  },
+  {
+    "objectID": "notebooks/01_introduction.html#data",
+    "href": "notebooks/01_introduction.html#data",
+    "title": "Gold & Treasury Yields — Introduction",
+    "section": "Data",
+    "text": "Data\n\n\n\n\n\n\n\n\n\nSeries\nSource\nEndpoint\nFrequency\n\n\n\n\nGold price (USD/oz)\nAlpha Vantage\nGOLD_SILVER_HISTORY\nDaily\n\n\n10Y US Treasury Yield (%)\nAlpha Vantage\nTREASURY_YIELD\nDaily\n\n\n\nSample period: June 1, 2011 — June 1, 2026 — 3,704 observations.\nNote: all yield data used in this analysis refers to the nominal 10Y Treasury yield. The implications of this choice — and its limitations relative to the real yield — are discussed throughout the analysis."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Gold Regime Monitor",
+    "section": "",
+    "text": "[1] \"English_United States.1252\"\n\n\n\n\n\n🟠 Decoupled — Nominal yield has limited explanatory power over gold\nLast updated: June 08, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\nRolling β (252d)\n-693.2\n\n\nRolling R² (252d)\n0.028 ▼\n\n\n\n\n\n\nDate\nGold (USD/oz)\n10Y Yield (%)\nZ-score\nRegime\n\n\n\n\n2026-06-02\n4480.3\n4.46\n1.87\nDecoupled\n\n\n2026-06-03\n4475.6\n4.49\n1.89\nDecoupled\n\n\n2026-06-04\n4455.4\n4.47\n1.66\nDecoupled\n\n\n2026-06-05\n4455.8\n4.55\n1.84\nDecoupled\n\n\n2026-06-08\n4344\n4.56\n1.31\nDecoupled"
+  },
+  {
+    "objectID": "notebooks/02_stat_des.html",
+    "href": "notebooks/02_stat_des.html",
+    "title": "Gold & Treasury Yields — Descriptive Statistics",
+    "section": "",
+    "text": "Code\nlibrary(arrow)\nlibrary(tidyverse)\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")\n\nglimpse(panel)\n\n\nRows: 3,709\nColumns: 4\n$ date  &lt;date&gt; 2011-06-01, 2011-06-02, 2011-06-03, 2011-06-06, 2011-06-07, 201…\n$ gold  &lt;dbl&gt; 1540.20, 1531.90, 1540.50, 1542.00, 1543.75, 1535.55, 1542.35, 1…\n$ brent &lt;dbl&gt; 116.15, 114.30, 115.09, 115.40, 116.14, 118.43, 119.95, 118.71, …\n$ yield &lt;dbl&gt; 2.96, 3.04, 2.99, 3.01, 3.01, 2.98, 3.01, 2.99, 3.00, 3.11, 2.98…"
+  },
+  {
+    "objectID": "notebooks/02_stat_des.html#data-loading",
+    "href": "notebooks/02_stat_des.html#data-loading",
+    "title": "Gold & Treasury Yields — Descriptive Statistics",
+    "section": "",
+    "text": "Code\nlibrary(arrow)\nlibrary(tidyverse)\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")\n\nglimpse(panel)\n\n\nRows: 3,709\nColumns: 4\n$ date  &lt;date&gt; 2011-06-01, 2011-06-02, 2011-06-03, 2011-06-06, 2011-06-07, 201…\n$ gold  &lt;dbl&gt; 1540.20, 1531.90, 1540.50, 1542.00, 1543.75, 1535.55, 1542.35, 1…\n$ brent &lt;dbl&gt; 116.15, 114.30, 115.09, 115.40, 116.14, 118.43, 119.95, 118.71, …\n$ yield &lt;dbl&gt; 2.96, 3.04, 2.99, 3.01, 3.01, 2.98, 3.01, 2.99, 3.00, 3.11, 2.98…"
+  },
+  {
+    "objectID": "notebooks/02_stat_des.html#time-range",
+    "href": "notebooks/02_stat_des.html#time-range",
+    "title": "Gold & Treasury Yields — Descriptive Statistics",
+    "section": "Time Range",
+    "text": "Time Range\n\n\nCode\ncat(\"First observation :\", format(min(panel$date)), \"\\n\")\n\n\nFirst observation : 2011-06-01 \n\n\nCode\ncat(\"Last observation  :\", format(max(panel$date)), \"\\n\")\n\n\nLast observation  : 2026-06-08 \n\n\nCode\ncat(\"Number of points  :\", nrow(panel), \"\\n\")\n\n\nNumber of points  : 3709"
+  },
+  {
+    "objectID": "notebooks/02_stat_des.html#descriptive-statistics",
+    "href": "notebooks/02_stat_des.html#descriptive-statistics",
+    "title": "Gold & Treasury Yields — Descriptive Statistics",
+    "section": "Descriptive Statistics",
+    "text": "Descriptive Statistics\n\n\nCode\npanel |&gt;\n  select(gold, yield) |&gt;\n  summary()\n\n\n      gold          yield      \n Min.   :1051   Min.   :0.520  \n 1st Qu.:1284   1st Qu.:1.830  \n Median :1611   Median :2.380  \n Mean   :1785   Mean   :2.594  \n 3rd Qu.:1888   3rd Qu.:3.230  \n Max.   :5478   Max.   :4.980"
+  },
+  {
+    "objectID": "notebooks/02_stat_des.html#raw-series-visualization",
+    "href": "notebooks/02_stat_des.html#raw-series-visualization",
+    "title": "Gold & Treasury Yields — Descriptive Statistics",
+    "section": "Raw Series Visualization",
+    "text": "Raw Series Visualization\n\n\nCode\npanel |&gt;\n  pivot_longer(cols = c(gold, yield), names_to = \"series\", values_to = \"value\") |&gt;\n  ggplot(aes(x = date, y = value, color = series)) +\n  geom_line() +\n  facet_wrap(~series, scales = \"free_y\", ncol = 1) +\n  labs(\n    title = \"Gold Price (USD/oz) and 10Y US Treasury Yield (%)\",\n    x = NULL, y = NULL\n  ) +\n  theme_minimal() +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html",
+    "href": "notebooks/04_cointegration.html",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "",
+    "text": "Two I(1) series are said to be cointegrated if a linear combination of them is stationary. Intuitively, even though each series wanders randomly on its own, they move together in the long run — they share a common stochastic trend.\nIn our case, cointegration between gold and the 10Y yield would mean that deviations from the long-run equilibrium relationship are temporary and self-correcting — which is precisely what H1 and H2 require."
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#what-is-cointegration",
+    "href": "notebooks/04_cointegration.html#what-is-cointegration",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "",
+    "text": "Two I(1) series are said to be cointegrated if a linear combination of them is stationary. Intuitively, even though each series wanders randomly on its own, they move together in the long run — they share a common stochastic trend.\nIn our case, cointegration between gold and the 10Y yield would mean that deviations from the long-run equilibrium relationship are temporary and self-correcting — which is precisely what H1 and H2 require."
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#the-johansen-test",
+    "href": "notebooks/04_cointegration.html#the-johansen-test",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "The Johansen Test",
+    "text": "The Johansen Test\nThe Johansen test is the standard multivariate framework for cointegration. It tests for the number of cointegrating vectors \\(r\\) in a system of I(1) series.\nWe test sequentially:\n\\[H_0: r = 0 \\quad \\text{(no cointegration)}\\] \\[H_0: r \\leq 1 \\quad \\text{(at most one cointegrating vector)}\\]\nRejecting \\(r = 0\\) and failing to reject \\(r \\leq 1\\) confirms exactly one cointegrating relationship — which is what we expect in a bivariate system.\nThe test comes in two variants:\n\nTrace test : tests whether the number of cointegrating vectors is less than \\(r\\)\nMaximum eigenvalue test : tests whether there are exactly \\(r\\) cointegrating vectors\n\nWe report both."
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#setup",
+    "href": "notebooks/04_cointegration.html#setup",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Setup",
+    "text": "Setup\n\n\nCode\nlibrary(arrow)\nlibrary(tidyverse)\nlibrary(urca)\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")\n\n# Bind series into a matrix — required by ca.jo()\ny &lt;- cbind(panel$gold, panel$yield)\ncolnames(y) &lt;- c(\"gold\", \"yield\")"
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#lag-selection",
+    "href": "notebooks/04_cointegration.html#lag-selection",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Lag Selection",
+    "text": "Lag Selection\nThe Johansen test requires specifying the number of lags. We use the Akaike Information Criterion (AIC) to select the optimal lag length.\n\n\nCode\nlibrary(vars) \n\nlag_select &lt;- VARselect(y, lag.max = 10, type = \"const\")\noptimal_lag &lt;- lag_select$selection[\"AIC(n)\"]\n\ncat(\"Optimal lag (AIC):\", optimal_lag, \"\\n\")\n\n\nOptimal lag (AIC): 5"
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#johansen-test-trace",
+    "href": "notebooks/04_cointegration.html#johansen-test-trace",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Johansen Test — Trace",
+    "text": "Johansen Test — Trace\n\n\nCode\njoh_trace &lt;- ca.jo(\n  y,\n  type  = \"trace\",\n  ecdet = \"const\",\n  K     = optimal_lag\n)\n\nsummary(joh_trace)\n\n\n\n###################### \n# Johansen-Procedure # \n###################### \n\nTest type: trace statistic , without linear trend and constant in cointegration \n\nEigenvalues (lambda):\n[1]  2.904754e-03  1.192352e-03 -4.336809e-19\n\nValues of teststatistic and critical values of test:\n\n          test 10pct  5pct  1pct\nr &lt;= 1 |  4.42  7.52  9.24 12.97\nr = 0  | 15.19 17.85 19.96 24.60\n\nEigenvectors, normalised to first column:\n(These are the cointegration relations)\n\n            gold.l5  yield.l5  constant\ngold.l5      1.0000    1.0000     1.000\nyield.l5   747.3142 -828.2435   255.721\nconstant -2577.1757  462.0153 -3553.071\n\nWeights W:\n(This is the loading matrix)\n\n             gold.l5      yield.l5      constant\ngold.d  7.949727e-04 -3.841334e-04  1.341517e-18\nyield.d 2.741204e-07  2.314914e-06 -2.544836e-21"
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#johansen-test-maximum-eigenvalue",
+    "href": "notebooks/04_cointegration.html#johansen-test-maximum-eigenvalue",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Johansen Test — Maximum Eigenvalue",
+    "text": "Johansen Test — Maximum Eigenvalue\n\n\nCode\njoh_eigen &lt;- ca.jo(\n  y,\n  type  = \"eigen\",\n  ecdet = \"const\",\n  K     = optimal_lag\n)\n\nsummary(joh_eigen)\n\n\n\n###################### \n# Johansen-Procedure # \n###################### \n\nTest type: maximal eigenvalue statistic (lambda max) , without linear trend and constant in cointegration \n\nEigenvalues (lambda):\n[1]  2.904754e-03  1.192352e-03 -4.336809e-19\n\nValues of teststatistic and critical values of test:\n\n          test 10pct  5pct  1pct\nr &lt;= 1 |  4.42  7.52  9.24 12.97\nr = 0  | 10.77 13.75 15.67 20.20\n\nEigenvectors, normalised to first column:\n(These are the cointegration relations)\n\n            gold.l5  yield.l5  constant\ngold.l5      1.0000    1.0000     1.000\nyield.l5   747.3142 -828.2435   255.721\nconstant -2577.1757  462.0153 -3553.071\n\nWeights W:\n(This is the loading matrix)\n\n             gold.l5      yield.l5      constant\ngold.d  7.949727e-04 -3.841334e-04  1.341517e-18\nyield.d 2.741204e-07  2.314914e-06 -2.544836e-21"
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#interpretation",
+    "href": "notebooks/04_cointegration.html#interpretation",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Interpretation",
+    "text": "Interpretation\nFor each test, we compare the test statistic to the critical value at 5%:\n\nFor the Trace test, for \\(H_0: r = 0\\) , the test-statistic is of 17.39, which is below the critical value at 5% (19.96) and even below the critical value at 10% (17.85).\nFor the Eigenvalue test, also for \\(H_0: r = 0\\) , the test-statistic is of 13.24, which is also below the critical values at 5% (15.67) and at 10% (13.75).\n\nWe expected this first H0 to be rejected, but in both cases we fail to reject it."
+  },
+  {
+    "objectID": "notebooks/04_cointegration.html#conclusion",
+    "href": "notebooks/04_cointegration.html#conclusion",
+    "title": "Gold & Treasury Yields — Cointegration Testing",
+    "section": "Conclusion",
+    "text": "Conclusion\nThe cointegration test has failed on the full time window. Still, by looking at the descriptive statistics, we see graphical evidences of a potential inflexion point around 2022 in the relationship of the two curves. We will therefore re-investigate the cointegration between 2011 and 2022."
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html",
+    "href": "notebooks/06_rolling_OLS.html",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "",
+    "text": "The cointegration tests on both the full period (2011–2026) and the pre-break sub-period (2011–2021) failed to confirm a stable long-run equilibrium between gold and the nominal 10Y Treasury yield.\nRather than concluding prematurely that no relationship exists, we investigate whether the nominal yield retains any episodic explanatory power over gold. The rolling OLS approach estimates \\(\\beta\\) on a moving window, allowing us to observe how — and when — the sensitivity of gold to the nominal yield activates or disappears over time.\nWe estimate the following regression on each rolling window \\([t-w, t]\\):\n\\[\\text{Gold}_t = \\alpha_t + \\beta_t \\cdot \\text{NominalYield}_t + \\varepsilon_t\\]\nwhere \\(w\\) is the window size. We compare three window sizes as a robustness check:\n\n60 days (~3 months) — reactive, but noisy\n252 days (~1 year) — standard\n504 days (~2 years) — smooth, but slow to detect breaks\n\nIf conclusions hold across all three windows, the result is robust to this arbitrary choice."
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#motivation",
+    "href": "notebooks/06_rolling_OLS.html#motivation",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "",
+    "text": "The cointegration tests on both the full period (2011–2026) and the pre-break sub-period (2011–2021) failed to confirm a stable long-run equilibrium between gold and the nominal 10Y Treasury yield.\nRather than concluding prematurely that no relationship exists, we investigate whether the nominal yield retains any episodic explanatory power over gold. The rolling OLS approach estimates \\(\\beta\\) on a moving window, allowing us to observe how — and when — the sensitivity of gold to the nominal yield activates or disappears over time.\nWe estimate the following regression on each rolling window \\([t-w, t]\\):\n\\[\\text{Gold}_t = \\alpha_t + \\beta_t \\cdot \\text{NominalYield}_t + \\varepsilon_t\\]\nwhere \\(w\\) is the window size. We compare three window sizes as a robustness check:\n\n60 days (~3 months) — reactive, but noisy\n252 days (~1 year) — standard\n504 days (~2 years) — smooth, but slow to detect breaks\n\nIf conclusions hold across all three windows, the result is robust to this arbitrary choice."
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#setup",
+    "href": "notebooks/06_rolling_OLS.html#setup",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Setup",
+    "text": "Setup\n\n\nCode\nlibrary(arrow)\nlibrary(tidyverse)\n\npanel &lt;- read_parquet(\"../data/macro_panel.parquet\")\n\n# Generic rolling OLS function\nroll_ols &lt;- function(data, window) {\n  n &lt;- nrow(data)\n  map_dfr((window + 1):n, function(i) {\n    fit &lt;- lm(gold ~ yield, data = data[(i - window):i, ])\n    tibble(\n      date  = data$date[i],\n      beta  = coef(fit)[2],\n      r2    = summary(fit)$r.squared,\n      resid = tail(residuals(fit), 1)\n    )\n  })\n}"
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#rolling-beta-three-windows",
+    "href": "notebooks/06_rolling_OLS.html#rolling-beta-three-windows",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Rolling Beta — Three Windows",
+    "text": "Rolling Beta — Three Windows\n\n\nCode\nwindows &lt;- c(60, 252, 504)\n\nresults_all &lt;- map_dfr(windows, function(w) {\n  roll_ols(panel, w) |&gt;\n    mutate(window = paste0(w, \" days\"))\n})\n\nresults_all |&gt;\n  ggplot(aes(x = date, y = beta, color = window)) +\n  geom_line(alpha = 0.8) +\n  geom_hline(yintercept = 0, linetype = \"dashed\", color = \"grey50\") +\n  scale_color_manual(values = c(\n    \"60 days\"  = \"#d7191c\",\n    \"252 days\" = \"#2c7bb6\",\n    \"504 days\" = \"#1a9641\"\n  )) +\n  labs(\n    title = \"Rolling Beta — Gold sensitivity to 10Y Treasury Yield\",\n    subtitle = \"Robustness check across three window sizes\",\n    x = NULL, y = \"β\", color = \"Window\"\n  ) +\n  theme_minimal()"
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#rolling-r²-three-windows",
+    "href": "notebooks/06_rolling_OLS.html#rolling-r²-three-windows",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Rolling R² — Three Windows",
+    "text": "Rolling R² — Three Windows\n\n\nCode\n# Graphique 2 — R² en facets\nresults_all |&gt;\n  ggplot(aes(x = date, y = r2, color = window)) +\n  geom_line(alpha = 0.8) +\n  facet_wrap(~window, ncol = 1) +\n  scale_color_manual(values = c(\n    \"60 days\"  = \"#d7191c\",\n    \"252 days\" = \"#2c7bb6\",\n    \"504 days\" = \"#1a9641\"\n  )) +\n  labs(\n    title = \"Rolling R² — Explanatory power of yield on gold\",\n    subtitle = \"Robustness check across three window sizes\",\n    x = NULL, y = \"R²\", color = \"Window\"\n  ) +\n  theme_minimal() +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#residual-z-score-h2-signal-252-day-window",
+    "href": "notebooks/06_rolling_OLS.html#residual-z-score-h2-signal-252-day-window",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Residual Z-score — H2 Signal (252-day window)",
+    "text": "Residual Z-score — H2 Signal (252-day window)\n\n\nCode\nresults_all &lt;- results_all |&gt;\n  group_by(window) |&gt;\n  mutate(\n    resid_mean = mean(resid, na.rm = TRUE),\n    resid_sd   = sd(resid, na.rm = TRUE),\n    z_score    = (resid - resid_mean) / resid_sd\n  ) |&gt;\n  ungroup()\n\nresults_all |&gt;\n  ggplot(aes(x = date, y = z_score, color = window)) +\n  geom_line(alpha = 0.8) +\n  geom_hline(yintercept =  2, linetype = \"dashed\", color = \"grey40\") +\n  geom_hline(yintercept = -2, linetype = \"dashed\", color = \"grey40\") +\n  geom_hline(yintercept =  0, linetype = \"solid\",  color = \"grey70\") +\n  facet_wrap(~window, ncol = 1) +\n  scale_color_manual(values = c(\n    \"60 days\"  = \"#d7191c\",\n    \"252 days\" = \"#2c7bb6\",\n    \"504 days\" = \"#1a9641\"\n  )) +\n  labs(\n    title = \"Residual Z-score — Deviation from rolling equilibrium\",\n    subtitle = \"Dashed lines at ±2σ — H2 signal\",\n    x = NULL, y = \"Z-score\", color = \"Window\"\n  ) +\n  theme_minimal() +\n  theme(legend.position = \"none\")"
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#interpretation",
+    "href": "notebooks/06_rolling_OLS.html#interpretation",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Interpretation",
+    "text": "Interpretation\nRolling β : if the three windows consistently hover around zero over 2012–2024, the absence of a stable relationship is robust to window choice. The post-2025 explosion is likely a statistical artifact driven by gold’s strong upward trend against a range-bound yield.\nRolling R² : episodic peaks — notably around 2016 and during the COVID shock (2020) — suggest the relationship activates in specific macro regimes: periods of low inflation where the nominal yield closely tracks the real yield.\nZ-score (H2) : in the absence of a stable cointegrating relationship, the Z-score does not constitute a mean-reversion signal in the strict sense. It measures the current deviation of gold relative to its historical average relationship with yields. A sustained Z-score above +2σ — as observed from 2024 onward — signals that gold is operating in a structurally different regime, likely driven by factors beyond Treasury yields (geopolitical risk, de-dollarization, central bank demand)."
+  },
+  {
+    "objectID": "notebooks/06_rolling_OLS.html#conclusion",
+    "href": "notebooks/06_rolling_OLS.html#conclusion",
+    "title": "Gold & Treasury Yields — Rolling OLS",
+    "section": "Conclusion",
+    "text": "Conclusion\nThe rolling OLS analysis delivers a clear and robust finding across all three window sizes: the nominal 10Y Treasury yield is not a structural explainer of gold prices.\nThe relationship is episodic. Periods of meaningful explanatory power — notably 2014–2016 and 2018–2022 — are visible in the 504-day R², reaching peaks above 0.75. However, these episodes are the exception rather than the rule over the full 2011–2026 sample.\nThis result is consistent with the theoretical limitation outlined in the introduction: the nominal yield embeds both the real rate and inflation expectations, two forces with opposing effects on gold. When inflation dominates — as it did post-2022 — the nominal yield loses its directional signal for gold, and the relationship breaks down or reverses.\nThe Z-score analysis reinforces this conclusion. From 2011 to approximately 2023, residuals fluctuate within the ±2σ band across all window sizes — consistent with a relationship operating near its historical average. From 2024 onward, all three windows show a sustained and extreme deviation above +2σ, peaking near +8σ on the 252-day window. This is not a mean-reversion signal — it is evidence of a structural regime change — driven by factors that lie outside the scope of this analysis and that the nominal yield alone cannot capture..\nH1 (long-run cointegration between gold and nominal yield): not validated.\nH2 (mean-reverting residual): partially validated — the signal holds in low-inflation regimes but breaks down when inflation expectations dominate the nominal yield signal.\nThese findings are discussed and synthesized in the general conclusion."
+  }
+]
