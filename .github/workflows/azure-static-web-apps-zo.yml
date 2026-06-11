@@ -22,7 +22,15 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: '4.3.3'
-
+            
+            
+      - name: Cache R packages
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: r-${{ hashFiles('**/DESCRIPTION') }}-tidyverse
+          restore-keys: r-
+          
       - name: Install R packages
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -63,9 +71,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ZO }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
+          app_location: "_site"
           api_location: ""
-          output_location: "_site"
+          output_location: ""
           skip_app_build: true
 
   close_pull_request_job:
